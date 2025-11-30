@@ -22,10 +22,8 @@ export const useSwipeGesture = (
   minSwipeDistance: number = 50
 ): SwipeHandlers => {
   const [touchStart, setTouchStart] = useState<SwipePosition | null>(null);
-  const [touchEnd, setTouchEnd] = useState<SwipePosition | null>(null);
 
   const handleTouchStart = (e: TouchEvent) => {
-    setTouchEnd(null);
     setTouchStart({
       x: e.targetTouches[0].clientX,
       y: e.targetTouches[0].clientY,

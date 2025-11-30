@@ -12,8 +12,7 @@ export const useIsTouchDevice = (): boolean => {
     const hasTouchSupport = 
       'ontouchstart' in window ||
       navigator.maxTouchPoints > 0 ||
-      // @ts-ignore - for older browsers
-      navigator.msMaxTouchPoints > 0;
+      ('msMaxTouchPoints' in navigator && (navigator as any).msMaxTouchPoints > 0);
 
     setIsTouchDevice(hasTouchSupport);
   }, []);

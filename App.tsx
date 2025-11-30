@@ -93,7 +93,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Toggle touch mode demo with 't' key
-      if (e.key === 't' || e.key === 'T') {
+      if (e.key.toLowerCase() === 't') {
         setForceTouchMode(prev => !prev);
         return;
       }
