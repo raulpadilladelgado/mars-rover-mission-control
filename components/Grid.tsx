@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { TouchEvent } from 'react';
 import { RoverState, GridSize, Obstacle } from '../types';
+
+interface SwipeHandlers {
+  onTouchStart: (e: TouchEvent) => void;
+  onTouchEnd: (e: TouchEvent) => void;
+}
 
 interface GridProps {
   rover: RoverState;
   gridSize: GridSize;
   obstacles: Obstacle[];
+  swipeHandlers?: SwipeHandlers;
 }
 
-const Grid: React.FC<GridProps> = ({ rover, gridSize, obstacles }) => {
+const Grid: React.FC<GridProps> = ({ rover, gridSize, obstacles, swipeHandlers }) => {
   const getObstacleAt = (x: number, y: number) => 
     obstacles.find(o => o.x === x && o.y === y);
 
@@ -73,7 +79,10 @@ const Grid: React.FC<GridProps> = ({ rover, gridSize, obstacles }) => {
   };
 
   return (
-    <div className="p-4 bg-space-900 rounded-xl border border-space-700 shadow-2xl overflow-hidden relative">
+    <div 
+      className="p-4 bg-space-900 rounded-xl border border-space-700 shadow-2xl overflow-hidden relative"
+      {...(swipeHandlers || {})}
+    >
       <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(102,252,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(102,252,241,0.03)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
       
       <div 
