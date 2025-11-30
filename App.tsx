@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Grid from './components/Grid';
 import Controls from './components/Controls';
+import TouchControls from './components/TouchControls';
 import { executeCommand, generateObstacles, DIRECTIONS } from './domain/marsRover';
 import { RoverState, GridSize, Obstacle, Direction } from './types';
+import { useIsTouchDevice } from './hooks/useIsTouchDevice';
+import { useSwipeGesture } from './hooks/useSwipeGesture';
 
 const INITIAL_GRID: GridSize = { width: 10, height: 10 };
 const INITIAL_ROVER: RoverState = {
@@ -17,6 +20,11 @@ const App: React.FC = () => {
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
   const [isExecuting, setIsExecuting] = useState(false);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTouchDevice = useIsTouchDevice();
+  
+  // Demo mode: Allow toggling touch mode with 't' key for testing
+  const [forceTouchMode, setForceTouchMode] = useState(false);
+  const showTouchControls = isTouchDevice || forceTouchMode;
 
   useEffect(() => {
     setObstacles(generateObstacles(8, INITIAL_GRID));
@@ -79,8 +87,17 @@ const App: React.FC = () => {
     executeSequence(cmds, rover);
   }, [rover, isExecuting, obstacles]);
 
+  // Setup swipe gesture for touch devices
+  const swipeHandlers = useSwipeGesture(handleSmartMove);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Toggle touch mode demo with 't' key
+      if (e.key === 't' || e.key === 'T') {
+        setForceTouchMode(prev => !prev);
+        return;
+      }
+      
       if (isExecuting || rover.isCrashed) return;
 
       switch(e.key) {
@@ -103,7 +120,7 @@ const App: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSmartMove, isExecuting, rover.isCrashed]);
+  }, [handleSmartMove, isExecuting, rover.isCrashed, forceTouchMode]);
 
   return (
     <div className="min-h-screen bg-space-900 text-space-700 p-4 md:p-8 font-sans selection:bg-space-600 selection:text-space-900 flex flex-col items-center">
@@ -122,19 +139,51 @@ const App: React.FC = () => {
 
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-4xl justify-center items-start">
         <div className="flex-1 w-full max-w-lg">
-          <Grid rover={rover} gridSize={INITIAL_GRID} obstacles={obstacles} />
+          <Grid 
+            rover={rover} 
+            gridSize={INITIAL_GRID} 
+            obstacles={obstacles}
+            swipeHandlers={showTouchControls ? swipeHandlers : undefined}
+          />
+          {showTouchControls && (
+            <div className="mt-2 text-xs text-space-500 text-center font-mono animate-pulse">
+              👆 SWIPE ON GRID TO MOVE
+            </div>
+          )}
         </div>
 
         <div className="w-full md:w-80 flex flex-col gap-6">
-          <Controls 
-            onReset={handleReset} 
-            disabled={isExecuting || rover.isCrashed} 
-          />
+          {showTouchControls ? (
+            <TouchControls 
+              onMove={handleSmartMove}
+              disabled={isExecuting || rover.isCrashed}
+            />
+          ) : (
+            <Controls 
+              onReset={handleReset} 
+              disabled={isExecuting || rover.isCrashed} 
+            />
+          )}
+          
+          {/* Always show reset button */}
+          {showTouchControls && (
+            <button
+              onClick={handleReset}
+              className="w-full py-3 bg-red-900/20 hover:bg-red-900 hover:text-white text-red-500 border border-red-900/50 rounded font-mono text-sm uppercase tracking-wider transition-all"
+            >
+              System Reset
+            </button>
+          )}
         </div>
       </div>
       
       <footer className="mt-12 text-center text-space-800 text-xs font-mono">
         SECURE CONNECTION // LATENCY: 24m 32s // PROTOCOL: KATA-V2
+        {!isTouchDevice && (
+          <div className="mt-2 text-space-700">
+            Press 'T' to toggle touch controls demo
+          </div>
+        )}
       </footer>
     </div>
   );
